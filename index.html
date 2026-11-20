@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1d2a">
+<title>🎄 Vianočný kvíz – Vyhodnotenie</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg1:#0b1d2a; --bg2:#12324a;
+    --card:rgba(255,255,255,.07); --border:rgba(255,255,255,.14);
+    --red:#e63946; --green:#2a9d8f; --gold:#f4c430; --text:#f1f5f9; --muted:#94a3b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Poppins',sans-serif;color:var(--text);min-height:100vh;
+    background:radial-gradient(circle at 20% 0%,#1d4e6e 0%,transparent 50%),
+               radial-gradient(circle at 90% 100%,#5a1a24 0%,transparent 45%),
+               linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;overflow-x:hidden;
+  }
+  .snow{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .flake{position:absolute;top:-10px;color:#fff;opacity:.8;animation:fall linear infinite}
+  @keyframes fall{to{transform:translateY(105vh) rotate(360deg)}}
+
+  .wrap{position:relative;z-index:1;max-width:1300px;margin:auto;padding:30px 20px 80px}
+  header{text-align:center;margin-bottom:30px}
+
+  /* ===== Farebný nadpis ===== */
+  header h1{font-family:'Fredoka',sans-serif;font-weight:700;font-size:clamp(2.3rem,7vw,4.4rem);
+    line-height:1.1;display:flex;align-items:center;justify-content:center;gap:.35em;flex-wrap:wrap}
+  .title{display:inline-flex;flex-wrap:wrap;justify-content:center;letter-spacing:.02em}
+  .title span{display:inline-block;animation:bounce 2.4s ease-in-out infinite;
+    text-shadow:0 3px 0 rgba(0,0,0,.35),0 0 18px currentColor}
+  .title .sp{width:.35em}
+  .emo{display:inline-block;animation:swing 3s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))}
+  .emo.r{animation-delay:-1.5s}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes swing{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+  header p{display:inline-block;margin-top:14px;padding:6px 18px;border-radius:30px;font-weight:600;
+    font-size:.95rem;color:#fff;letter-spacing:.3px;
+    background:linear-gradient(90deg,#e63946,#f4a261,#2a9d8f);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  @media (prefers-reduced-motion:reduce){.title span,.emo,.flake{animation:none}}
+
+  .toolbar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;border-radius:12px;
+    padding:10px 18px;color:#fff;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+  .btn:active{transform:scale(.97)}
+  .btn-red{background:linear-gradient(135deg,#e63946,#b5172a);box-shadow:0 6px 20px rgba(230,57,70,.35)}
+  .btn-green{background:linear-gradient(135deg,#2a9d8f,#1b6f65);box-shadow:0 6px 20px rgba(42,157,143,.35)}
+  .btn-gold{background:linear-gradient(135deg,#f4c430,#d49b00);color:#1a1a1a;box-shadow:0 6px 20px rgba(244,196,48,.35)}
+  .btn-ghost{background:var(--card);border:1px solid var(--border)}
+  .btn-sm{padding:5px 10px;font-size:.8rem;border-radius:8px}
+  .btn-icon{padding:4px 8px;font-size:.8rem;border-radius:6px}
+
+  .glass{background:var(--card);border:1px solid var(--border);border-radius:20px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.3)}
+
+  .board{padding:24px;margin-bottom:34px}
+  .board h2{margin-bottom:16px;font-size:1.3rem}
+  .rank{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.04);margin-bottom:8px}
+  .rank .pos{font-size:1.5rem;width:40px;text-align:center;font-weight:800}
+  .rank .nm{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .rank .bar{flex:2;height:10px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden}
+  .rank .bar div{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:10px;transition:width .5s}
+  .rank .pts{font-weight:800;color:var(--gold);min-width:70px;text-align:right}
+  .rank.first{background:linear-gradient(90deg,rgba(244,196,48,.18),transparent)}
+
+  .teams{display:grid;gap:26px}
+  .team{padding:22px;animation:pop .35s ease}
+  @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+  .team-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .team-name{flex:1;min-width:200px;font-size:1.4rem;font-weight:800;background:transparent;border:none;
+    color:var(--text);border-bottom:2px dashed transparent;padding:4px 0;font-family:inherit}
+  .team-name:hover,.team-name:focus{border-bottom-color:var(--gold);outline:none}
+  .total-badge{background:linear-gradient(135deg,var(--gold),#e0a800);color:#1a1a1a;font-weight:800;padding:8px 16px;border-radius:30px}
+
+  .members{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+  .members .lbl{color:var(--muted);font-size:.85rem;margin-right:4px}
+  .chip{display:flex;align-items:center;gap:4px;background:rgba(42,157,143,.2);border:1px solid rgba(42,157,143,.5);
+    border-radius:20px;padding:3px 6px 3px 12px;font-size:.85rem;max-width:100%}
+  .chip input{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:.85rem;min-width:40px;max-width:100%}
+  .chip input:focus{outline:none}
+  .chip button{background:none;border:none;color:#fff;opacity:.6;cursor:pointer;padding:2px 4px}
+  .chip button:hover{opacity:1;color:var(--red)}
+  .add-member{background:rgba(255,255,255,.06);border:1px dashed var(--border);border-radius:20px;
+    padding:4px 12px;color:var(--text);font-family:inherit;font-size:.85rem;width:150px}
+  .add-member:focus{outline:none;border-color:var(--gold)}
+
+  .table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.07)}
+  th{background:rgba(255,255,255,.06);color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase}
+  td.round-cell{text-align:left;white-space:nowrap}
+  .round-name{background:transparent;border:none;color:var(--text);font-weight:600;font-family:inherit;width:120px}
+  .round-name:focus{outline:none;border-bottom:1px solid var(--gold)}
+  .q{display:inline-flex;flex-direction:column;align-items:center;gap:2px;margin:2px}
+  .q small{color:var(--muted);font-size:.65rem}
+  .q input{width:52px;padding:6px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,.25);
+    color:var(--text);text-align:center;font-family:inherit;font-weight:600}
+  .q input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(42,157,143,.25)}
+  .qb{margin-left:10px;padding-left:12px;border-left:2px dashed rgba(244,196,48,.5)}
+  .qb small{color:var(--gold);font-weight:800;letter-spacing:.5px}
+  .qb input{width:64px;border:2px solid var(--gold);background:rgba(244,196,48,.14);color:var(--gold);font-weight:800}
+  .qb input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(244,196,48,.3)}
+  .qs{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px}
+  .sum{font-weight:800;color:var(--gold);font-size:1.05rem}
+  .ctrls{display:flex;gap:4px;justify-content:center;align-items:center}
+  .ctrls span{color:var(--muted);font-size:.75rem}
+  tfoot td{font-weight:800;background:rgba(244,196,48,.08)}
+  .team-foot{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--muted);padding:50px}
+
+  /* ===== Export modal + loader ===== */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-bg.show{display:flex}
+  .modal{background:#12324a;border:1px solid var(--border);border-radius:20px;padding:28px;width:min(420px,100%);text-align:center}
+  .modal h3{margin-bottom:6px}.modal p{color:var(--muted);font-size:.85rem;margin-bottom:18px}
+  .modal .btn{width:100%;justify-content:center;margin-bottom:10px}
+  .loader{font-size:1.1rem}.loader .spin{display:inline-block;animation:sp 1s linear infinite;font-size:2rem}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* ===== Exportné strany (mimo obrazovky) ===== */
+  #exportRoot{position:fixed;left:-20000px;top:0;width:1123px;font-family:'Poppins',sans-serif}
+  .xp{width:1123px;min-height:794px;padding:46px 56px 60px;color:#f1f5f9;position:relative;overflow:hidden;
+      background:linear-gradient(160deg,#0b1d2a 0%,#12324a 60%,#3a1620 100%)}
+  .xp-top{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid rgba(244,196,48,.5);padding-bottom:14px;margin-bottom:26px}
+  .xp-top h1{font-family:'Fredoka',sans-serif;font-weight:700;font-size:42px;color:#f4c430}
+  .xp-top span{color:#94a3b8;font-size:15px}
+  .xp-foot{position:absolute;bottom:18px;left:56px;right:56px;display:flex;justify-content:space-between;color:#64748b;font-size:12px}
+  .podium{display:flex;justify-content:center;align-items:flex-end;gap:22px;margin:10px 0 34px}
+  .pd{width:230px;text-align:center}
+  .pd .who{font-weight:800;font-size:20px;margin-bottom:4px}
+  .pd .pp{color:#f4c430;font-weight:800;font-size:18px;margin-bottom:10px}
+  .pd .blk{border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;font-size:54px}
+  .pd.p1 .blk{height:190px;background:linear-gradient(180deg,#f4c430,#b8860b)}
+  .pd.p2 .blk{height:140px;background:linear-gradient(180deg,#cbd5e1,#64748b)}
+  .pd.p3 .blk{height:105px;background:linear-gradient(180deg,#e09f5a,#8b5a2b)}
+  .xt{width:100%;border-collapse:collapse;font-size:17px;border-radius:14px;overflow:hidden}
+  .xt th{background:#1b6f65;color:#fff;padding:12px;font-size:14px;text-transform:uppercase;letter-spacing:.5px}
+  .xt th.xb{background:#b8860b}
+  .xt td{padding:11px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.08)}
+  .xt tbody tr:nth-child(odd) td{background:rgba(255,255,255,.06)}
+  .xt tbody tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  .xt td.xb{color:#f4c430;font-weight:800;background:rgba(244,196,48,.12)!important}
+  .xt .l{text-align:left;font-weight:600}
+  .xt .g{color:#f4c430;font-weight:800}
+  .xt tr.win td{background:rgba(244,196,48,.2)!important}
+  .xt tfoot td{background:#f4c430;color:#1a1a1a;font-weight:800;font-size:19px}
+  .xteam-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .xteam-h h2{font-size:34px;font-weight:800}
+  .xbadge{background:linear-gradient(135deg,#f4c430,#d49b00);color:#1a1a1a;padding:10px 22px;border-radius:30px;font-weight:800;font-size:22px}
+  .xmem{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;align-items:center}
+  .xmem b{color:#94a3b8;font-weight:600;margin-right:4px}
+  .xmem span{background:rgba(42,157,143,.25);border:1px solid rgba(42,157,143,.7);border-radius:20px;padding:4px 14px;font-size:15px}
+  .xplace{font-size:18px;color:#94a3b8;margin-top:4px}
+
+  /* ===== MOBIL ===== */
+  @media (max-width:700px){
+    .wrap{padding:18px 10px 60px}
+    header{margin-bottom:20px}
+    header p{font-size:.8rem;padding:5px 14px}
+    .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+    .toolbar .btn{justify-content:center;padding:12px 8px;font-size:.85rem}
+    .btn:hover{transform:none}
+    .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(18,50,74,.88)}
+
+    .board{padding:16px;margin-bottom:22px}
+    .rank{flex-wrap:wrap;gap:8px;padding:10px 12px}
+    .rank .pos{width:32px;font-size:1.3rem}
+    .rank .bar{order:5;flex:1 1 100%}
+
+    .teams{gap:18px}
+    .team{padding:16px}
+    .team-head{gap:8px}
+    .team-head > span:first-child{display:none}
+    .team-name{min-width:0;width:100%;flex:1 1 100%;font-size:1.25rem}
+    .total-badge{flex:1;text-align:center}
+    .team-head .btn-sm{padding:9px 14px}
+    .add-member{width:100%;font-size:16px;padding:8px 12px}
+    .chip input{font-size:16px}
+
+    .table-wrap{border:none;overflow:visible}
+    .team table,.team tbody,.team tfoot,.team tr,.team td{display:block;width:100%}
+    .team thead{display:none}
+    .team tbody tr{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;
+      background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:14px;
+      padding:10px;margin-bottom:12px}
+    .team td{border:none;padding:2px;width:auto}
+    .team tbody td:nth-child(1){grid-row:1;grid-column:1}
+    .team tbody td:nth-child(4){grid-row:1;grid-column:2;padding:0 6px}
+    .team tbody td:nth-child(5){grid-row:1;grid-column:3}
+    .team tbody td:nth-child(2){grid-row:2;grid-column:1/-1}
+    .team tbody td:nth-child(3){grid-row:3;grid-column:1/-1}
+    .team tbody td.sum::before{content:'Σ ';color:var(--muted);font-weight:400}
+    .round-name{width:100%;font-size:16px}
+    .qs{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px}
+    .q{margin:0}
+    .q input{width:100%;font-size:16px;padding:10px 4px}
+    .qb{grid-column:span 2;margin-left:0;padding-left:0;border-left:none}
+    .qb input{width:100%}
+    .ctrls{justify-content:flex-start}
+    .btn-icon{padding:10px 16px;font-size:1rem}
+    .team tfoot tr{display:flex;justify-content:space-between;align-items:center;
+      border-radius:14px;background:rgba(244,196,48,.12);padding:12px}
+    .team tfoot td{background:none;width:auto;padding:0}
+    .team tfoot td:empty{display:none}
+    .team-foot .btn{flex:1 1 100%;justify-content:center;padding:12px}
+    .modal{padding:22px}
+    .modal .btn{padding:14px}
+  }
+</style>
+</head>
+<body>
+<div class="snow" id="snow"></div>
+
+<div class="wrap">
+  <header>
+    <h1>
+      <span class="emo">🎄</span>
+      <span class="title" id="title"></span>
+      <span class="emo r">🎅</span>
+    </h1>
+    <p>Vyhodnotenie tímov • Vianočný večierok</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn btn-red" onclick="addTeam()">➕ Pridať tím</button>
+    <button class="btn btn-gold" onclick="openExport()">📤 Export</button>
+    <button class="btn btn-ghost" onclick="resetScores()">🔄 Vynulovať body</button>
+    <button class="btn btn-ghost" onclick="clearAll()">🗑️ Vymazať všetko</button>
+  </div>
+
+  <section class="glass board">
+    <h2>🏆 Poradie</h2>
+    <div id="leaderboard"></div>
+  </section>
+
+  <section class="teams" id="teams"></section>
+</div>
+
+<!-- Export modal -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeExport()">
+  <div class="modal" id="modalBox">
+    <h3>📤 Export výsledkov</h3>
+    <p>Poradie + každý tím na samostatnej strane</p>
+    <button class="btn btn-red" onclick="exportPDF()">📄 PDF (A4, viac strán)</button>
+    <button class="btn btn-green" onclick="exportJPG(false)">🖼️ JPG – všetko v jednom obrázku</button>
+    <button class="btn btn-gold" onclick="exportJPG(true)">🏆 JPG – iba poradie</button>
+    <button class="btn btn-ghost" onclick="closeExport()">Zavrieť</button>
+  </div>
+</div>
+
+<div id="exportRoot"></div>
+
+<script>
+const KEY='xmasQuizData';
+const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||innerWidth<700;
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+function newTeam(name){return{id:uid(),name:name||'Nový tím',members:[],rounds:[newRound(1),newRound(2),newRound(3)]};}
+function newRound(n,q=5){return{name:'Kolo '+n,scores:Array(q).fill(''),bonus:''};}
+
+let teams;
+try{teams=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){teams=null;}
+if(!Array.isArray(teams))teams=[newTeam('Soby'),newTeam('Snehuliaci')];
+/* migrácia starších dát – doplnenie bonusu */
+teams.forEach(t=>t.rounds.forEach(r=>{if(r.bonus===undefined)r.bonus='';}));
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(teams));}catch(e){}}
+function num(v){const x=parseFloat(String(v??'').replace(',','.'));return isNaN(x)?0:x;}
+function roundSum(r){return r.scores.reduce((a,b)=>a+num(b),0)+num(r.bonus);}
+function teamTotal(t){return t.rounds.reduce((a,r)=>a+roundSum(r),0);}
+function fmt(n){return String(Math.round(n*100)/100).replace('.',',');}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const T=id=>teams.find(t=>t.id===id);
+
+/* ---------- akcie ---------- */
+function addTeam(){teams.push(newTeam('Tím '+(teams.length+1)));commit();}
+function removeTeam(id){const t=T(id);if(!confirm(`Odstrániť tím „${t.name}“?`))return;teams=teams.filter(x=>x.id!==id);commit();}
+function renameTeam(id,v){T(id).name=v;save();renderBoard();}
+function addMember(id,input){const v=input.value.trim();if(!v)return;T(id).members.push(v);input.value='';commit();
+  setTimeout(()=>document.querySelector(`[data-add="${id}"]`)?.focus(),0);}
+function editMember(id,i,v){T(id).members[i]=v;save();}
+function removeMember(id,i){T(id).members.splice(i,1);commit();}
+function addRound(id){const t=T(id);t.rounds.push(newRound(t.rounds.length+1,t.rounds[t.rounds.length-1]?.scores.length||5));commit();}
+function removeRound(id,ri){const t=T(id);if(t.rounds.length<=1)return alert('Tím musí mať aspoň 1 kolo.');
+  if(!confirm(`Odstrániť „${t.rounds[ri].name}“?`))return;t.rounds.splice(ri,1);commit();}
+function renameRound(id,ri,v){T(id).rounds[ri].name=v;save();}
+function addQuestion(id,ri){T(id).rounds[ri].scores.push('');commit();}
+function removeQuestion(id,ri){const r=T(id).rounds[ri];if(r.scores.length<=1)return;r.scores.pop();commit();}
+function refreshSums(id,ri){
+  const t=T(id);
+  document.getElementById(`rs-${id}-${ri}`).textContent=fmt(roundSum(t.rounds[ri]));
+  document.querySelectorAll(`.tt-${id}`).forEach(e=>e.textContent=fmt(teamTotal(t)));
+  renderBoard();
+}
+const clean=v=>v.replace(/[^0-9.,\-]/g,'');
+function setScore(id,ri,qi,v){T(id).rounds[ri].scores[qi]=clean(v);save();refreshSums(id,ri);}
+function setBonus(id,ri,v){T(id).rounds[ri].bonus=clean(v);save();refreshSums(id,ri);}
+function copyStructure(id){
+  const src=T(id);
+  if(!confirm('Skopírovať štruktúru kôl a otázok do všetkých tímov?'))return;
+  teams.forEach(t=>{if(t.id===id)return;
+    t.rounds=src.rounds.map((r,ri)=>({name:r.name,
+      scores:r.scores.map((_,qi)=>t.rounds[ri]?.scores[qi]??''),
+      bonus:t.rounds[ri]?.bonus??''}));});
+  commit();
+}
+function resetScores(){if(!confirm('Vynulovať všetky body (vrátane bonusov)?'))return;
+  teams.forEach(t=>t.rounds.forEach(r=>{r.scores=r.scores.map(()=>'');r.bonus='';}));commit();}
+function clearAll(){if(!confirm('Naozaj vymazať všetky tímy?'))return;teams=[];commit();}
+function commit(){save();render();}
+
+/* ---------- poradie ---------- */
+function ranking(){
+  const s=[...teams].sort((a,b)=>teamTotal(b)-teamTotal(a));let place=0,prev=null;
+  return s.map((t,i)=>{const tot=teamTotal(t);if(tot!==prev){place=i;prev=tot;}return{t,tot,place};});
+}
+const medals=['🥇','🥈','🥉'];
+
+/* ---------- render ---------- */
+function renderBoard(){
+  const el=document.getElementById('leaderboard');
+  if(!teams.length){el.innerHTML='<div class="empty">Zatiaľ žiadne tímy 🎁</div>';return;}
+  const r=ranking();const max=Math.max(1,...r.map(x=>x.tot));
+  el.innerHTML=r.map(({t,tot,place})=>`<div class="rank ${place===0&&tot>0?'first':''}">
+    <div class="pos">${medals[place]||(place+1)+'.'}</div>
+    <div class="nm">${esc(t.name)||'<i>bez názvu</i>'}</div>
+    <div class="bar"><div style="width:${Math.max(0,tot)/max*100}%"></div></div>
+    <div class="pts">${fmt(tot)} b.</div></div>`).join('');
+}
+function renderTeams(){
+  const el=document.getElementById('teams');
+  if(!teams.length){el.innerHTML='<div class="glass empty">Kliknite na „➕ Pridať tím“ a začnite 🎄</div>';return;}
+  el.innerHTML=teams.map(t=>{
+    const rows=t.rounds.map((r,ri)=>`
+      <tr>
+        <td class="round-cell">🎁 <input class="round-name" value="${esc(r.name)}" oninput="renameRound('${t.id}',${ri},this.value)"></td>
+        <td style="text-align:left"><div class="qs">
+          ${r.scores.map((s,qi)=>`<label class="q"><small>O${qi+1}</small>
+            <input type="text" inputmode="decimal" autocomplete="off" value="${esc(s)}"
+              oninput="setScore('${t.id}',${ri},${qi},this.value)"></label>`).join('')}
+          <label class="q qb" title="Bonusová otázka"><small>★ BONUS</small>
+            <input type="text" inputmode="decimal" autocomplete="off" value="${esc(r.bonus??'')}"
+              oninput="setBonus('${t.id}',${ri},this.value)"></label>
+        </div></td>
+        <td><div class="ctrls">
+          <button class="btn btn-green btn-icon" title="Pridať otázku" onclick="addQuestion('${t.id}',${ri})">＋</button>
+          <button class="btn btn-ghost btn-icon" title="Odobrať otázku" onclick="removeQuestion('${t.id}',${ri})">－</button>
+          <span>${r.scores.length} ot. + bonus</span>
+        </div></td>
+        <td class="sum" id="rs-${t.id}-${ri}">${fmt(roundSum(r))}</td>
+        <td><button class="btn btn-ghost btn-icon" title="Odstrániť kolo" onclick="removeRound('${t.id}',${ri})">🗑️</button></td>
+      </tr>`).join('');
+    return `
+    <article class="glass team">
+      <div class="team-head">
+        <span style="font-size:1.6rem">🎅</span>
+        <input class="team-name" value="${esc(t.name)}" placeholder="Názov tímu" oninput="renameTeam('${t.id}',this.value)">
+        <span class="total-badge">⭐ <span class="tt-${t.id}">${fmt(teamTotal(t))}</span> b.</span>
+        <button class="btn btn-red btn-sm" onclick="removeTeam('${t.id}')">✕ Odstrániť</button>
+      </div>
+      <div class="members">
+        <span class="lbl">👥 Členovia:</span>
+        ${t.members.map((m,i)=>`<span class="chip">
+          <input value="${esc(m)}" size="${Math.max(3,m.length)}" oninput="this.size=Math.max(3,this.value.length);editMember('${t.id}',${i},this.value)">
+          <button onclick="removeMember('${t.id}',${i})">✕</button></span>`).join('')}
+        <input class="add-member" data-add="${t.id}" placeholder="+ meno a Enter" enterkeyhint="done"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addMember('${t.id}',this)}" onblur="addMember('${t.id}',this)">
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Kolo</th><th>Body za otázky + ★ bonus</th><th>Otázky</th><th>Súčet</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td colspan="3" style="text-align:right">SPOLU (${t.rounds.length} kôl)</td>
+          <td class="sum tt-${t.id}">${fmt(teamTotal(t))}</td><td></td></tr></tfoot>
+      </table></div>
+      <div class="team-foot">
+        <button class="btn btn-green btn-sm" onclick="addRound('${t.id}')">➕ Pridať kolo</button>
+        <button class="btn btn-ghost btn-sm" onclick="copyStructure('${t.id}')">📋 Použiť štruktúru pre všetky tímy</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+function render(){renderBoard();renderTeams();}
+
+/* ================= EXPORT ================= */
+const today=()=>new Date().toLocaleDateString('sk-SK');
+const fileDate=()=>new Date().toISOString().slice(0,10);
+function xHeader(sub){return `<div class="xp-top"><h1>🎄 Vianočný kvíz</h1><span>${sub} • ${today()}</span></div>`;}
+function xFooter(p,n){return `<div class="xp-foot"><span>Vianočný večierok – vyhodnotenie kvízu</span><span>Strana ${p} / ${n}</span></div>`;}
+
+function buildSummaryPage(p,n){
+  const r=ranking();
+  const top=[r[1],r[0],r[2]];const cls=['p2','p1','p3'];
+  const podium=top.map((x,i)=>x?`<div class="pd ${cls[i]}"><div class="who">${esc(x.t.name)}</div>
+     <div class="pp">${fmt(x.tot)} b.</div><div class="blk">${medals[x.place]||''}</div></div>`:'').join('');
+  const rows=r.map(({t,tot,place})=>`<tr class="${place===0&&tot>0?'win':''}">
+     <td style="font-size:22px">${medals[place]||(place+1)+'.'}</td><td class="l">${esc(t.name)}</td>
+     <td>${t.members.map(esc).join(', ')||'–'}</td>
+     <td>${t.rounds.map(rr=>fmt(roundSum(rr))).join(' | ')||'–'}</td>
+     <td class="g">${fmt(tot)}</td></tr>`).join('');
+  return `<div class="xp">${xHeader('Celkové poradie')}
+    <div class="podium">${podium}</div>
+    <table class="xt"><thead><tr><th style="width:70px">#</th><th style="text-align:left">Tím</th><th>Členovia</th><th>Body po kolách (vrátane bonusu)</th><th style="width:110px">Spolu</th></tr></thead>
+    <tbody>${rows}</tbody></table>${xFooter(p,n)}</div>`;
+}
+
+function buildTeamPage(t,p,n){
+  const rk=ranking().find(x=>x.t.id===t.id);
+  const maxQ=Math.max(1,...t.rounds.map(r=>r.scores.length));
+  const fs=maxQ>14?13:maxQ>10?15:17;
+  const cell=v=>v===''||v==null?'–':fmt(num(v));
+  const head=Array.from({length:maxQ},(_,i)=>`<th>O${i+1}</th>`).join('');
+  const rows=t.rounds.map(r=>`<tr><td class="l">🎁 ${esc(r.name)}</td>
+     ${Array.from({length:maxQ},(_,i)=>i<r.scores.length?`<td>${cell(r.scores[i])}</td>`:'<td style="opacity:.25">·</td>').join('')}
+     <td class="xb">${cell(r.bonus)}</td>
+     <td class="g">${fmt(roundSum(r))}</td></tr>`).join('');
+  return `<div class="xp">${xHeader('Výsledky tímu')}
+    <div class="xteam-h"><div><h2>🎅 ${esc(t.name)}</h2>
+      <div class="xplace">Umiestnenie: ${medals[rk.place]||''} ${rk.place+1}. miesto z ${teams.length}</div></div>
+      <div class="xbadge">⭐ ${fmt(teamTotal(t))} bodov</div></div>
+    <div class="xmem"><b>👥 Členovia:</b>${t.members.length?t.members.map(m=>`<span>${esc(m)}</span>`).join(''):'<span>–</span>'}</div>
+    <table class="xt" style="font-size:${fs}px"><thead><tr><th style="text-align:left">Kolo</th>${head}<th class="xb">★ Bonus</th><th>Súčet</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr><td class="l">SPOLU (${t.rounds.length} kôl)</td><td colspan="${maxQ+1}"></td><td>${fmt(teamTotal(t))}</td></tr></tfoot>
+    </table>${xFooter(p,n)}</div>`;
+}
+
+function buildExport(onlySummary){
+  const n=onlySummary?1:teams.length+1;
+  let html=buildSummaryPage(1,n);
+  if(!onlySummary)teams.forEach((t,i)=>html+=buildTeamPage(t,i+2,n));
+  const root=document.getElementById('exportRoot');root.innerHTML=html;
+  return [...root.querySelectorAll('.xp')];
+}
+
+let modalHTML='';
+function openExport(){if(!teams.length)return alert('Najprv pridajte aspoň jeden tím.');document.getElementById('modal').classList.add('show');}
+function closeExport(){document.getElementById('modal').classList.remove('show');}
+function loading(on){
+  const box=document.getElementById('modalBox');
+  if(on){modalHTML=box.innerHTML;box.innerHTML='<div class="loader"><div class="spin">❄️</div><p style="margin-top:10px">Generujem export…</p></div>';}
+  else if(modalHTML){box.innerHTML=modalHTML;}
+}
+function libsOk(){if(window.html2canvas&&window.jspdf)return true;alert('Knižnice pre export sa nenačítali. Skontrolujte internetové pripojenie a obnovte stránku.');return false;}
+const snap=el=>html2canvas(el,{scale:isMobile?1.5:2,backgroundColor:'#0b1d2a',useCORS:true,logging:false});
+
+async function saveFile(blob,name){
+  if(isMobile&&navigator.canShare){
+    try{
+      const file=new File([blob],name,{type:blob.type});
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Vianočný kvíz'});return;}
+    }catch(e){if(e.name==='AbortError')return;}
+  }
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function finishExport(){document.getElementById('exportRoot').innerHTML='';loading(false);closeExport();}
+
+async function exportPDF(){
+  if(!libsOk())return;loading(true);
+  try{
+    await document.fonts.ready;
+    const pages=buildExport(false);
+    const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const W=297,H=210;
+    for(let i=0;i<pages.length;i++){
+      const c=await snap(pages[i]);
+      const ratio=Math.min(W/c.width,H/c.height);const w=c.width*ratio,h=c.height*ratio;
+      if(i)pdf.addPage();
+      pdf.setFillColor(11,29,42);pdf.rect(0,0,W,H,'F');
+      pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',(W-w)/2,(H-h)/2,w,h);
+    }
+    await saveFile(pdf.output('blob'),`vianocny-kviz-${fileDate()}.pdf`);
+  }catch(e){alert('Chyba pri exporte: '+e.message);}
+  finishExport();
+}
+
+async function exportJPG(onlySummary){
+  if(!libsOk())return;loading(true);
+  try{
+    await document.fonts.ready;
+    const pages=buildExport(onlySummary);
+    const shots=[];for(const p of pages)shots.push(await snap(p));
+    const gap=onlySummary?0:24;
+    const out=document.createElement('canvas');
+    out.width=Math.max(...shots.map(s=>s.width));
+    out.height=shots.reduce((a,s)=>a+s.height,0)+gap*(shots.length-1);
+    const ctx=out.getContext('2d');ctx.fillStyle='#f4c430';ctx.fillRect(0,0,out.width,out.height);
+    let y=0;shots.forEach(s=>{ctx.drawImage(s,0,y);y+=s.height+gap;});
+    const blob=await new Promise(res=>out.toBlob(res,'image/jpeg',0.9));
+    if(!blob)throw new Error('Obrázok je príliš veľký pre toto zariadenie – skúste PDF.');
+    await saveFile(blob,`vianocny-kviz-${onlySummary?'poradie':'vysledky'}-${fileDate()}.jpg`);
+  }catch(e){alert('Chyba pri exporte: '+e.message);}
+  finishExport();
+}
+
+/* ---------- sneh ---------- */
+(function(){const s=document.getElementById('snow');const n=isMobile?20:45;
+  for(let i=0;i<n;i++){const f=document.createElement('div');f.className='flake';f.textContent=Math.random()>.5?'❄':'•';
+    f.style.left=Math.random()*100+'vw';f.style.fontSize=(8+Math.random()*14)+'px';
+    f.style.animationDuration=(8+Math.random()*12)+'s';f.style.animationDelay=(-Math.random()*20)+'s';
+    f.style.opacity=.3+Math.random()*.6;s.appendChild(f);}})();
+
+/* ---------- farebný nadpis ---------- */
+(function(){
+  const text='Vianočný kvíz';
+  const colors=['#ff4d5e','#ffd23f','#3ddc97','#4cc9f0','#ff8fab','#f4a261'];
+  document.getElementById('title').innerHTML=[...text].map((ch,i)=>
+    ch===' '?'<span class="sp"></span>'
+    :`<span style="color:${colors[i%colors.length]};animation-delay:${-i*0.15}s">${ch}</span>`).join('');
+})();
+
+render();
+</script>
+</body>
+</html>
